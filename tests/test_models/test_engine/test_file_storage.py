@@ -21,6 +21,7 @@ import unittest
 FileStorage = file_storage.FileStorage
 classes = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
            "Place": Place, "Review": Review, "State": State, "User": User}
+storage = models.storage
 
 
 class TestFileStorageDocs(unittest.TestCase):
@@ -70,6 +71,16 @@ test_file_storage.py'])
 
 class TestFileStorage(unittest.TestCase):
     """Test the FileStorage class"""
+
+    def setUp(self):
+        """initializes new storage object for testing"""
+        self.storage = FileStorage()
+        self.bm_obj = BaseModel()
+
+    def test_instantiation(self):
+        """... checks proper FileStorage instantiation"""
+        self.assertIsInstance(self.storage, FileStorage)
+
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_all_returns_dict(self):
         """Test that all returns the FileStorage.__objects attr"""
@@ -113,3 +124,25 @@ class TestFileStorage(unittest.TestCase):
         with open("file.json", "r") as f:
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
+
+    def test_get(self):
+        """check if get method returns state"""
+        real_state = storage.get("State", self.state.id)
+        fake_state = storage.get("State", "12345")
+        no_state = storage.get("", "")
+
+        self.assertEqual(real_state, self.state)
+        self.assertNotEqual(fake_state, self.state)
+        self.assertIsNone(no_state)
+
+    def test_count(self):
+        """checks if count method returns correct numbers"""
+        state_count = storage.count("State")
+        city_count = storage.count("City")
+        place_count = storage.count("Place")
+        all_count = storage.count(None)
+
+        self.assertEqual(state_count, 1)
+        self.assertEqual(city_count, 2)
+        self.assertEqual(place_count, 0)
+        self.assertEqual(all_count, 18)
